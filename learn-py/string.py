@@ -46,3 +46,7 @@ print(s1.center(12)) # ' anas jaidi '
 #? number of times a specified value appears in the string. 
 #+ string.count(value, start, end)
 print(s1.count('anas')) # 1
+
+#? find index of string in other string
+print(s1.find('jaidi')) # 5
+print(s1.find('mqwed')) # -1 not found
