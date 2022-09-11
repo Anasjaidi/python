@@ -1,6 +1,4 @@
-from cmath import log
-from hashlib import new
-from operator import ne
+
 
 
 _ = ['anas', 'jaidi']
