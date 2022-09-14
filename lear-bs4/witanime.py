@@ -68,7 +68,7 @@ def get_anime_info():
   return obj
 
 # get_anime_links()
-animeLinks = ['https://witanime.com/anime/digimon-adventure/']
+animeLinks = ['https://witanime.com/anime/one-piece/']
 data = get_anime_info()
 with open("sample.json", "w") as outfile:
     json.dump(data, outfile)
