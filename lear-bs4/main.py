@@ -1,4 +1,8 @@
 from operator import imod
+import json
+import re
+from translate import Translator
+import translators as ts
 import string
 from requests import api
 from bs4 import BeautifulSoup
@@ -20,10 +24,23 @@ def get_anime_links(res):
 i = 0
 
 
-def anime_dataa(list_info):
+def anime_dataa(list_info, link):
+    obj = {'link': link, 'genres': [], 'titles':{}}
     for li in list_info:
-      print(li.find_one('span.dark_text').string)
-    return 0
+        if li.string in ['Synonyms:', 'Episodes:', 'Status:', 'Rating:', 'Duration:', 'Source:']:
+            obj.update({str(li.string).lower()[:-1]: str(li.next_sibling).strip(' \n')})
+        elif li.string in ['Type:', 'Premiered:', 'Studios:']:
+            obj.update({str(li.string).lower()[:-1]: str(li.next_sibling.next_sibling.string)})
+        elif li.string in ['Japanese:', 'English:', 'French:']:
+            obj['titles'] = ({**obj['titles'], str(li.string).lower()[:-1]: str(li.next_sibling).strip(' \n')})
+        elif li.string == 'Broadcast:':
+            obj.update({'broadcast': str(' '.join(li.next_sibling.strip(' \n').split()[0:3]))})
+        elif li.string == 'Score:':
+            obj.update({'score': float(li.next_sibling.next_sibling.string)})
+        elif li.string == 'Genres:':
+            for l in li.find_next_siblings("a"):
+                obj['genres'] = [x for x in obj['genres']] + [str(ts.bing(str(l.string), to_language='ar'))]
+    return(obj)
 
 
 def get_anime_data(links):
@@ -33,20 +50,25 @@ def get_anime_data(links):
     resp = api.get(links[0])
     del soup
     soup = BeautifulSoup(resp.text, 'html.parser')
-    lii = soup.select('.spaceit_pad')
-    # anime_dataa(lii)
-    print(lii)
+    li = soup.select('.spaceit_pad span')
+    obj = anime_dataa(li, links[0])
+    obj = {**anime_dataa(li, links[0]), **{'descrption': soup.find('p', {})}}
+    # print(json.dumps(obj))
+    print(obj)
 
 
-while i < 5:
-    resp = 0
-    del resp
-    endpoint = url + ('' if not page else '?limit=' + str(page*pagging))
-    resp = api.get(endpoint)
-    if resp.status_code == 200:
-        chunk_anime_links = get_anime_links(resp)
-        get_anime_data(chunk_anime_links)
-    else:
-        break
-    i += 1
-    pagging += 1
+resp = endpoint = chunk_anime_links = 0
+def get_anime_links():
+    while i < 2:
+        del resp, endpoint, chunk_anime_links
+        endpoint = url + ('' if not page else '?limit=' + str(page*pagging))
+        resp = api.get(endpoint)
+        if resp.status_code == 200:
+            chunk_anime_links = get_anime_links(resp)
+            get_anime_data(chunk_anime_links)
+        else:
+            break
+        i += 1
+        pagging += 1
+
+print(get_anime_links())
